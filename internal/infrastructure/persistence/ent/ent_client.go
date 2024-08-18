@@ -2,9 +2,12 @@ package ent
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"fmt"
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence"
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/deepingtalk"
@@ -12,6 +15,7 @@ import (
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/productvideo"
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/uservideo"
 	"github.com/rs/zerolog/log"
+	"os"
 	"strings"
 )
 
@@ -27,8 +31,23 @@ type EntClient struct {
 }
 
 func NewEntClient(cfg Config) *EntClient {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=True",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=True&tls=custom",
 		cfg.Username, cfg.Password, cfg.URL, cfg.Port, cfg.Name)
+	rootCertPool := x509.NewCertPool()
+	pem, err := os.ReadFile("cert.pem")
+	if err != nil {
+		log.Error().Err(err).Msgf("failed to read cert.pem")
+	}
+	if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
+		log.Error().Msgf("failed to append certs")
+	}
+	err = mysql.RegisterTLSConfig("custom", &tls.Config{
+		RootCAs: rootCertPool,
+	})
+	if err != nil {
+		log.Error().Err(err).Msgf("failed to register custom TLS config")
+	}
+
 	drv, err := sql.Open(dialect.MySQL, dsn)
 	if err != nil {
 		log.Error().Err(err).Msg("failed opening connection to mysql")
