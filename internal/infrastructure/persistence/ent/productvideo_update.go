@@ -41,6 +41,20 @@ func (pvu *ProductVideoUpdate) SetNillableURL(s *string) *ProductVideoUpdate {
 	return pvu
 }
 
+// SetPlayableVideo sets the "playable_video" field.
+func (pvu *ProductVideoUpdate) SetPlayableVideo(s string) *ProductVideoUpdate {
+	pvu.mutation.SetPlayableVideo(s)
+	return pvu
+}
+
+// SetNillablePlayableVideo sets the "playable_video" field if the given value is not nil.
+func (pvu *ProductVideoUpdate) SetNillablePlayableVideo(s *string) *ProductVideoUpdate {
+	if s != nil {
+		pvu.SetPlayableVideo(*s)
+	}
+	return pvu
+}
+
 // Mutation returns the ProductVideoMutation object of the builder.
 func (pvu *ProductVideoUpdate) Mutation() *ProductVideoMutation {
 	return pvu.mutation
@@ -85,6 +99,9 @@ func (pvu *ProductVideoUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := pvu.mutation.URL(); ok {
 		_spec.SetField(productvideo.FieldURL, field.TypeString, value)
 	}
+	if value, ok := pvu.mutation.PlayableVideo(); ok {
+		_spec.SetField(productvideo.FieldPlayableVideo, field.TypeString, value)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pvu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{productvideo.Label}
@@ -115,6 +132,20 @@ func (pvuo *ProductVideoUpdateOne) SetURL(s string) *ProductVideoUpdateOne {
 func (pvuo *ProductVideoUpdateOne) SetNillableURL(s *string) *ProductVideoUpdateOne {
 	if s != nil {
 		pvuo.SetURL(*s)
+	}
+	return pvuo
+}
+
+// SetPlayableVideo sets the "playable_video" field.
+func (pvuo *ProductVideoUpdateOne) SetPlayableVideo(s string) *ProductVideoUpdateOne {
+	pvuo.mutation.SetPlayableVideo(s)
+	return pvuo
+}
+
+// SetNillablePlayableVideo sets the "playable_video" field if the given value is not nil.
+func (pvuo *ProductVideoUpdateOne) SetNillablePlayableVideo(s *string) *ProductVideoUpdateOne {
+	if s != nil {
+		pvuo.SetPlayableVideo(*s)
 	}
 	return pvuo
 }
@@ -192,6 +223,9 @@ func (pvuo *ProductVideoUpdateOne) sqlSave(ctx context.Context) (_node *ProductV
 	}
 	if value, ok := pvuo.mutation.URL(); ok {
 		_spec.SetField(productvideo.FieldURL, field.TypeString, value)
+	}
+	if value, ok := pvuo.mutation.PlayableVideo(); ok {
+		_spec.SetField(productvideo.FieldPlayableVideo, field.TypeString, value)
 	}
 	_node = &ProductVideo{config: pvuo.config}
 	_spec.Assign = _node.assignValues

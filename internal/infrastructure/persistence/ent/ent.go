@@ -12,6 +12,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/deepingtalk"
+	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/productreview"
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/productvideo"
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/uservideo"
 )
@@ -74,8 +76,10 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			productvideo.Table: productvideo.ValidColumn,
-			uservideo.Table:    uservideo.ValidColumn,
+			deepingtalk.Table:   deepingtalk.ValidColumn,
+			productreview.Table: productreview.ValidColumn,
+			productvideo.Table:  productvideo.ValidColumn,
+			uservideo.Table:     uservideo.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

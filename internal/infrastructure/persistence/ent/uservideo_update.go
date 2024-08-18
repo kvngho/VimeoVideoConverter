@@ -62,6 +62,20 @@ func (uvu *UserVideoUpdate) SetNillableVideoURL(s *string) *UserVideoUpdate {
 	return uvu
 }
 
+// SetPlayableVideo sets the "playable_video" field.
+func (uvu *UserVideoUpdate) SetPlayableVideo(s string) *UserVideoUpdate {
+	uvu.mutation.SetPlayableVideo(s)
+	return uvu
+}
+
+// SetNillablePlayableVideo sets the "playable_video" field if the given value is not nil.
+func (uvu *UserVideoUpdate) SetNillablePlayableVideo(s *string) *UserVideoUpdate {
+	if s != nil {
+		uvu.SetPlayableVideo(*s)
+	}
+	return uvu
+}
+
 // Mutation returns the UserVideoMutation object of the builder.
 func (uvu *UserVideoUpdate) Mutation() *UserVideoMutation {
 	return uvu.mutation
@@ -125,6 +139,9 @@ func (uvu *UserVideoUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uvu.mutation.VideoURL(); ok {
 		_spec.SetField(uservideo.FieldVideoURL, field.TypeString, value)
 	}
+	if value, ok := uvu.mutation.PlayableVideo(); ok {
+		_spec.SetField(uservideo.FieldPlayableVideo, field.TypeString, value)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uvu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{uservideo.Label}
@@ -176,6 +193,20 @@ func (uvuo *UserVideoUpdateOne) SetVideoURL(s string) *UserVideoUpdateOne {
 func (uvuo *UserVideoUpdateOne) SetNillableVideoURL(s *string) *UserVideoUpdateOne {
 	if s != nil {
 		uvuo.SetVideoURL(*s)
+	}
+	return uvuo
+}
+
+// SetPlayableVideo sets the "playable_video" field.
+func (uvuo *UserVideoUpdateOne) SetPlayableVideo(s string) *UserVideoUpdateOne {
+	uvuo.mutation.SetPlayableVideo(s)
+	return uvuo
+}
+
+// SetNillablePlayableVideo sets the "playable_video" field if the given value is not nil.
+func (uvuo *UserVideoUpdateOne) SetNillablePlayableVideo(s *string) *UserVideoUpdateOne {
+	if s != nil {
+		uvuo.SetPlayableVideo(*s)
 	}
 	return uvuo
 }
@@ -272,6 +303,9 @@ func (uvuo *UserVideoUpdateOne) sqlSave(ctx context.Context) (_node *UserVideo, 
 	}
 	if value, ok := uvuo.mutation.VideoURL(); ok {
 		_spec.SetField(uservideo.FieldVideoURL, field.TypeString, value)
+	}
+	if value, ok := uvuo.mutation.PlayableVideo(); ok {
+		_spec.SetField(uservideo.FieldPlayableVideo, field.TypeString, value)
 	}
 	_node = &UserVideo{config: uvuo.config}
 	_spec.Assign = _node.assignValues

@@ -25,6 +25,12 @@ func (pvc *ProductVideoCreate) SetURL(s string) *ProductVideoCreate {
 	return pvc
 }
 
+// SetPlayableVideo sets the "playable_video" field.
+func (pvc *ProductVideoCreate) SetPlayableVideo(s string) *ProductVideoCreate {
+	pvc.mutation.SetPlayableVideo(s)
+	return pvc
+}
+
 // Mutation returns the ProductVideoMutation object of the builder.
 func (pvc *ProductVideoCreate) Mutation() *ProductVideoMutation {
 	return pvc.mutation
@@ -62,6 +68,9 @@ func (pvc *ProductVideoCreate) check() error {
 	if _, ok := pvc.mutation.URL(); !ok {
 		return &ValidationError{Name: "url", err: errors.New(`ent: missing required field "ProductVideo.url"`)}
 	}
+	if _, ok := pvc.mutation.PlayableVideo(); !ok {
+		return &ValidationError{Name: "playable_video", err: errors.New(`ent: missing required field "ProductVideo.playable_video"`)}
+	}
 	return nil
 }
 
@@ -91,6 +100,10 @@ func (pvc *ProductVideoCreate) createSpec() (*ProductVideo, *sqlgraph.CreateSpec
 	if value, ok := pvc.mutation.URL(); ok {
 		_spec.SetField(productvideo.FieldURL, field.TypeString, value)
 		_node.URL = value
+	}
+	if value, ok := pvc.mutation.PlayableVideo(); ok {
+		_spec.SetField(productvideo.FieldPlayableVideo, field.TypeString, value)
+		_node.PlayableVideo = value
 	}
 	return _node, _spec
 }

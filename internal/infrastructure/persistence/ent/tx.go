@@ -12,6 +12,10 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// DeepingTalk is the client for interacting with the DeepingTalk builders.
+	DeepingTalk *DeepingTalkClient
+	// ProductReview is the client for interacting with the ProductReview builders.
+	ProductReview *ProductReviewClient
 	// ProductVideo is the client for interacting with the ProductVideo builders.
 	ProductVideo *ProductVideoClient
 	// UserVideo is the client for interacting with the UserVideo builders.
@@ -147,6 +151,8 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.DeepingTalk = NewDeepingTalkClient(tx.config)
+	tx.ProductReview = NewProductReviewClient(tx.config)
 	tx.ProductVideo = NewProductVideoClient(tx.config)
 	tx.UserVideo = NewUserVideoClient(tx.config)
 }
@@ -158,7 +164,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: ProductVideo.QueryXXX(), the query will be executed
+// applies a query, for example: DeepingTalk.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

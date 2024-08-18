@@ -17,6 +17,7 @@ func (UserVideo) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("video_id").Positive(),
 		field.String("video_url"),
+		field.String("playable_video"),
 	}
 }
 

@@ -16,6 +16,7 @@ type ProductVideo struct {
 func (ProductVideo) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("url"),
+		field.String("playable_video"),
 	}
 }
 

@@ -31,6 +31,12 @@ func (uvc *UserVideoCreate) SetVideoURL(s string) *UserVideoCreate {
 	return uvc
 }
 
+// SetPlayableVideo sets the "playable_video" field.
+func (uvc *UserVideoCreate) SetPlayableVideo(s string) *UserVideoCreate {
+	uvc.mutation.SetPlayableVideo(s)
+	return uvc
+}
+
 // Mutation returns the UserVideoMutation object of the builder.
 func (uvc *UserVideoCreate) Mutation() *UserVideoMutation {
 	return uvc.mutation
@@ -76,6 +82,9 @@ func (uvc *UserVideoCreate) check() error {
 	if _, ok := uvc.mutation.VideoURL(); !ok {
 		return &ValidationError{Name: "video_url", err: errors.New(`ent: missing required field "UserVideo.video_url"`)}
 	}
+	if _, ok := uvc.mutation.PlayableVideo(); !ok {
+		return &ValidationError{Name: "playable_video", err: errors.New(`ent: missing required field "UserVideo.playable_video"`)}
+	}
 	return nil
 }
 
@@ -109,6 +118,10 @@ func (uvc *UserVideoCreate) createSpec() (*UserVideo, *sqlgraph.CreateSpec) {
 	if value, ok := uvc.mutation.VideoURL(); ok {
 		_spec.SetField(uservideo.FieldVideoURL, field.TypeString, value)
 		_node.VideoURL = value
+	}
+	if value, ok := uvc.mutation.PlayableVideo(); ok {
+		_spec.SetField(uservideo.FieldPlayableVideo, field.TypeString, value)
+		_node.PlayableVideo = value
 	}
 	return _node, _spec
 }

@@ -57,6 +57,11 @@ func URL(v string) predicate.ProductVideo {
 	return predicate.ProductVideo(sql.FieldEQ(FieldURL, v))
 }
 
+// PlayableVideo applies equality check predicate on the "playable_video" field. It's identical to PlayableVideoEQ.
+func PlayableVideo(v string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldEQ(FieldPlayableVideo, v))
+}
+
 // URLEQ applies the EQ predicate on the "url" field.
 func URLEQ(v string) predicate.ProductVideo {
 	return predicate.ProductVideo(sql.FieldEQ(FieldURL, v))
@@ -120,6 +125,71 @@ func URLEqualFold(v string) predicate.ProductVideo {
 // URLContainsFold applies the ContainsFold predicate on the "url" field.
 func URLContainsFold(v string) predicate.ProductVideo {
 	return predicate.ProductVideo(sql.FieldContainsFold(FieldURL, v))
+}
+
+// PlayableVideoEQ applies the EQ predicate on the "playable_video" field.
+func PlayableVideoEQ(v string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldEQ(FieldPlayableVideo, v))
+}
+
+// PlayableVideoNEQ applies the NEQ predicate on the "playable_video" field.
+func PlayableVideoNEQ(v string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldNEQ(FieldPlayableVideo, v))
+}
+
+// PlayableVideoIn applies the In predicate on the "playable_video" field.
+func PlayableVideoIn(vs ...string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldIn(FieldPlayableVideo, vs...))
+}
+
+// PlayableVideoNotIn applies the NotIn predicate on the "playable_video" field.
+func PlayableVideoNotIn(vs ...string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldNotIn(FieldPlayableVideo, vs...))
+}
+
+// PlayableVideoGT applies the GT predicate on the "playable_video" field.
+func PlayableVideoGT(v string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldGT(FieldPlayableVideo, v))
+}
+
+// PlayableVideoGTE applies the GTE predicate on the "playable_video" field.
+func PlayableVideoGTE(v string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldGTE(FieldPlayableVideo, v))
+}
+
+// PlayableVideoLT applies the LT predicate on the "playable_video" field.
+func PlayableVideoLT(v string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldLT(FieldPlayableVideo, v))
+}
+
+// PlayableVideoLTE applies the LTE predicate on the "playable_video" field.
+func PlayableVideoLTE(v string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldLTE(FieldPlayableVideo, v))
+}
+
+// PlayableVideoContains applies the Contains predicate on the "playable_video" field.
+func PlayableVideoContains(v string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldContains(FieldPlayableVideo, v))
+}
+
+// PlayableVideoHasPrefix applies the HasPrefix predicate on the "playable_video" field.
+func PlayableVideoHasPrefix(v string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldHasPrefix(FieldPlayableVideo, v))
+}
+
+// PlayableVideoHasSuffix applies the HasSuffix predicate on the "playable_video" field.
+func PlayableVideoHasSuffix(v string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldHasSuffix(FieldPlayableVideo, v))
+}
+
+// PlayableVideoEqualFold applies the EqualFold predicate on the "playable_video" field.
+func PlayableVideoEqualFold(v string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldEqualFold(FieldPlayableVideo, v))
+}
+
+// PlayableVideoContainsFold applies the ContainsFold predicate on the "playable_video" field.
+func PlayableVideoContainsFold(v string) predicate.ProductVideo {
+	return predicate.ProductVideo(sql.FieldContainsFold(FieldPlayableVideo, v))
 }
 
 // And groups predicates with the AND operator between them.

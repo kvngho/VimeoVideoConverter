@@ -6,6 +6,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// DeepingTalk is the predicate function for deepingtalk builders.
+type DeepingTalk func(*sql.Selector)
+
+// ProductReview is the predicate function for productreview builders.
+type ProductReview func(*sql.Selector)
+
 // ProductVideo is the predicate function for productvideo builders.
 type ProductVideo func(*sql.Selector)
 

@@ -17,8 +17,10 @@ type ProductVideo struct {
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
 	// URL holds the value of the "url" field.
-	URL          string `json:"url,omitempty"`
-	selectValues sql.SelectValues
+	URL string `json:"url,omitempty"`
+	// PlayableVideo holds the value of the "playable_video" field.
+	PlayableVideo string `json:"playable_video,omitempty"`
+	selectValues  sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -28,7 +30,7 @@ func (*ProductVideo) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case productvideo.FieldID:
 			values[i] = new(sql.NullInt64)
-		case productvideo.FieldURL:
+		case productvideo.FieldURL, productvideo.FieldPlayableVideo:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -56,6 +58,12 @@ func (pv *ProductVideo) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field url", values[i])
 			} else if value.Valid {
 				pv.URL = value.String
+			}
+		case productvideo.FieldPlayableVideo:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field playable_video", values[i])
+			} else if value.Valid {
+				pv.PlayableVideo = value.String
 			}
 		default:
 			pv.selectValues.Set(columns[i], values[i])
@@ -95,6 +103,9 @@ func (pv *ProductVideo) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", pv.ID))
 	builder.WriteString("url=")
 	builder.WriteString(pv.URL)
+	builder.WriteString(", ")
+	builder.WriteString("playable_video=")
+	builder.WriteString(pv.PlayableVideo)
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -9,10 +9,35 @@ import (
 )
 
 var (
+	// DeepingtalkDeepingtalkColumns holds the columns for the "deepingtalk_deepingtalk" table.
+	DeepingtalkDeepingtalkColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "talk_video", Type: field.TypeString},
+		{Name: "playable_video", Type: field.TypeString},
+	}
+	// DeepingtalkDeepingtalkTable holds the schema information for the "deepingtalk_deepingtalk" table.
+	DeepingtalkDeepingtalkTable = &schema.Table{
+		Name:       "deepingtalk_deepingtalk",
+		Columns:    DeepingtalkDeepingtalkColumns,
+		PrimaryKey: []*schema.Column{DeepingtalkDeepingtalkColumns[0]},
+	}
+	// DeepingreviewProductreviewColumns holds the columns for the "deepingreview_productreview" table.
+	DeepingreviewProductreviewColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "playable_video", Type: field.TypeString},
+		{Name: "review_video", Type: field.TypeString},
+	}
+	// DeepingreviewProductreviewTable holds the schema information for the "deepingreview_productreview" table.
+	DeepingreviewProductreviewTable = &schema.Table{
+		Name:       "deepingreview_productreview",
+		Columns:    DeepingreviewProductreviewColumns,
+		PrimaryKey: []*schema.Column{DeepingreviewProductreviewColumns[0]},
+	}
 	// ProductProductvideoColumns holds the columns for the "product_productvideo" table.
 	ProductProductvideoColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "url", Type: field.TypeString},
+		{Name: "playable_video", Type: field.TypeString},
 	}
 	// ProductProductvideoTable holds the schema information for the "product_productvideo" table.
 	ProductProductvideoTable = &schema.Table{
@@ -25,6 +50,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "video_id", Type: field.TypeInt},
 		{Name: "video_url", Type: field.TypeString},
+		{Name: "playable_video", Type: field.TypeString},
 	}
 	// AccountUservideoTable holds the schema information for the "account_uservideo" table.
 	AccountUservideoTable = &schema.Table{
@@ -34,12 +60,20 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		DeepingtalkDeepingtalkTable,
+		DeepingreviewProductreviewTable,
 		ProductProductvideoTable,
 		AccountUservideoTable,
 	}
 )
 
 func init() {
+	DeepingtalkDeepingtalkTable.Annotation = &entsql.Annotation{
+		Table: "deepingtalk_deepingtalk",
+	}
+	DeepingreviewProductreviewTable.Annotation = &entsql.Annotation{
+		Table: "deepingreview_productreview",
+	}
 	ProductProductvideoTable.Annotation = &entsql.Annotation{
 		Table: "product_productvideo",
 	}

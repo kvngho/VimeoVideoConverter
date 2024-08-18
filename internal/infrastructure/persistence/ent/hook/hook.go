@@ -9,6 +9,30 @@ import (
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent"
 )
 
+// The DeepingTalkFunc type is an adapter to allow the use of ordinary
+// function as DeepingTalk mutator.
+type DeepingTalkFunc func(context.Context, *ent.DeepingTalkMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f DeepingTalkFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.DeepingTalkMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DeepingTalkMutation", m)
+}
+
+// The ProductReviewFunc type is an adapter to allow the use of ordinary
+// function as ProductReview mutator.
+type ProductReviewFunc func(context.Context, *ent.ProductReviewMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProductReviewFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProductReviewMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProductReviewMutation", m)
+}
+
 // The ProductVideoFunc type is an adapter to allow the use of ordinary
 // function as ProductVideo mutator.
 type ProductVideoFunc func(context.Context, *ent.ProductVideoMutation) (ent.Value, error)

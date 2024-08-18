@@ -10,7 +10,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/deepingtalk"
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/predicate"
+	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/productreview"
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/productvideo"
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/uservideo"
 )
@@ -24,21 +26,784 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeProductVideo = "ProductVideo"
-	TypeUserVideo    = "UserVideo"
+	TypeDeepingTalk   = "DeepingTalk"
+	TypeProductReview = "ProductReview"
+	TypeProductVideo  = "ProductVideo"
+	TypeUserVideo     = "UserVideo"
 )
+
+// DeepingTalkMutation represents an operation that mutates the DeepingTalk nodes in the graph.
+type DeepingTalkMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *int
+	talk_video     *string
+	playable_video *string
+	clearedFields  map[string]struct{}
+	done           bool
+	oldValue       func(context.Context) (*DeepingTalk, error)
+	predicates     []predicate.DeepingTalk
+}
+
+var _ ent.Mutation = (*DeepingTalkMutation)(nil)
+
+// deepingtalkOption allows management of the mutation configuration using functional options.
+type deepingtalkOption func(*DeepingTalkMutation)
+
+// newDeepingTalkMutation creates new mutation for the DeepingTalk entity.
+func newDeepingTalkMutation(c config, op Op, opts ...deepingtalkOption) *DeepingTalkMutation {
+	m := &DeepingTalkMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeDeepingTalk,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withDeepingTalkID sets the ID field of the mutation.
+func withDeepingTalkID(id int) deepingtalkOption {
+	return func(m *DeepingTalkMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *DeepingTalk
+		)
+		m.oldValue = func(ctx context.Context) (*DeepingTalk, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().DeepingTalk.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withDeepingTalk sets the old DeepingTalk of the mutation.
+func withDeepingTalk(node *DeepingTalk) deepingtalkOption {
+	return func(m *DeepingTalkMutation) {
+		m.oldValue = func(context.Context) (*DeepingTalk, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m DeepingTalkMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m DeepingTalkMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *DeepingTalkMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *DeepingTalkMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().DeepingTalk.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTalkVideo sets the "talk_video" field.
+func (m *DeepingTalkMutation) SetTalkVideo(s string) {
+	m.talk_video = &s
+}
+
+// TalkVideo returns the value of the "talk_video" field in the mutation.
+func (m *DeepingTalkMutation) TalkVideo() (r string, exists bool) {
+	v := m.talk_video
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTalkVideo returns the old "talk_video" field's value of the DeepingTalk entity.
+// If the DeepingTalk object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DeepingTalkMutation) OldTalkVideo(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTalkVideo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTalkVideo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTalkVideo: %w", err)
+	}
+	return oldValue.TalkVideo, nil
+}
+
+// ResetTalkVideo resets all changes to the "talk_video" field.
+func (m *DeepingTalkMutation) ResetTalkVideo() {
+	m.talk_video = nil
+}
+
+// SetPlayableVideo sets the "playable_video" field.
+func (m *DeepingTalkMutation) SetPlayableVideo(s string) {
+	m.playable_video = &s
+}
+
+// PlayableVideo returns the value of the "playable_video" field in the mutation.
+func (m *DeepingTalkMutation) PlayableVideo() (r string, exists bool) {
+	v := m.playable_video
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlayableVideo returns the old "playable_video" field's value of the DeepingTalk entity.
+// If the DeepingTalk object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DeepingTalkMutation) OldPlayableVideo(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlayableVideo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlayableVideo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlayableVideo: %w", err)
+	}
+	return oldValue.PlayableVideo, nil
+}
+
+// ResetPlayableVideo resets all changes to the "playable_video" field.
+func (m *DeepingTalkMutation) ResetPlayableVideo() {
+	m.playable_video = nil
+}
+
+// Where appends a list predicates to the DeepingTalkMutation builder.
+func (m *DeepingTalkMutation) Where(ps ...predicate.DeepingTalk) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the DeepingTalkMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *DeepingTalkMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.DeepingTalk, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *DeepingTalkMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *DeepingTalkMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (DeepingTalk).
+func (m *DeepingTalkMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *DeepingTalkMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.talk_video != nil {
+		fields = append(fields, deepingtalk.FieldTalkVideo)
+	}
+	if m.playable_video != nil {
+		fields = append(fields, deepingtalk.FieldPlayableVideo)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *DeepingTalkMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case deepingtalk.FieldTalkVideo:
+		return m.TalkVideo()
+	case deepingtalk.FieldPlayableVideo:
+		return m.PlayableVideo()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *DeepingTalkMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case deepingtalk.FieldTalkVideo:
+		return m.OldTalkVideo(ctx)
+	case deepingtalk.FieldPlayableVideo:
+		return m.OldPlayableVideo(ctx)
+	}
+	return nil, fmt.Errorf("unknown DeepingTalk field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *DeepingTalkMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case deepingtalk.FieldTalkVideo:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTalkVideo(v)
+		return nil
+	case deepingtalk.FieldPlayableVideo:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlayableVideo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown DeepingTalk field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *DeepingTalkMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *DeepingTalkMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *DeepingTalkMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown DeepingTalk numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *DeepingTalkMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *DeepingTalkMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *DeepingTalkMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown DeepingTalk nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *DeepingTalkMutation) ResetField(name string) error {
+	switch name {
+	case deepingtalk.FieldTalkVideo:
+		m.ResetTalkVideo()
+		return nil
+	case deepingtalk.FieldPlayableVideo:
+		m.ResetPlayableVideo()
+		return nil
+	}
+	return fmt.Errorf("unknown DeepingTalk field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *DeepingTalkMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *DeepingTalkMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *DeepingTalkMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *DeepingTalkMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *DeepingTalkMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *DeepingTalkMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *DeepingTalkMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown DeepingTalk unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *DeepingTalkMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown DeepingTalk edge %s", name)
+}
+
+// ProductReviewMutation represents an operation that mutates the ProductReview nodes in the graph.
+type ProductReviewMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *int
+	playable_video *string
+	review_video   *string
+	clearedFields  map[string]struct{}
+	done           bool
+	oldValue       func(context.Context) (*ProductReview, error)
+	predicates     []predicate.ProductReview
+}
+
+var _ ent.Mutation = (*ProductReviewMutation)(nil)
+
+// productreviewOption allows management of the mutation configuration using functional options.
+type productreviewOption func(*ProductReviewMutation)
+
+// newProductReviewMutation creates new mutation for the ProductReview entity.
+func newProductReviewMutation(c config, op Op, opts ...productreviewOption) *ProductReviewMutation {
+	m := &ProductReviewMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeProductReview,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withProductReviewID sets the ID field of the mutation.
+func withProductReviewID(id int) productreviewOption {
+	return func(m *ProductReviewMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ProductReview
+		)
+		m.oldValue = func(ctx context.Context) (*ProductReview, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ProductReview.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withProductReview sets the old ProductReview of the mutation.
+func withProductReview(node *ProductReview) productreviewOption {
+	return func(m *ProductReviewMutation) {
+		m.oldValue = func(context.Context) (*ProductReview, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ProductReviewMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ProductReviewMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ProductReviewMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ProductReviewMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ProductReview.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetPlayableVideo sets the "playable_video" field.
+func (m *ProductReviewMutation) SetPlayableVideo(s string) {
+	m.playable_video = &s
+}
+
+// PlayableVideo returns the value of the "playable_video" field in the mutation.
+func (m *ProductReviewMutation) PlayableVideo() (r string, exists bool) {
+	v := m.playable_video
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlayableVideo returns the old "playable_video" field's value of the ProductReview entity.
+// If the ProductReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductReviewMutation) OldPlayableVideo(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlayableVideo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlayableVideo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlayableVideo: %w", err)
+	}
+	return oldValue.PlayableVideo, nil
+}
+
+// ResetPlayableVideo resets all changes to the "playable_video" field.
+func (m *ProductReviewMutation) ResetPlayableVideo() {
+	m.playable_video = nil
+}
+
+// SetReviewVideo sets the "review_video" field.
+func (m *ProductReviewMutation) SetReviewVideo(s string) {
+	m.review_video = &s
+}
+
+// ReviewVideo returns the value of the "review_video" field in the mutation.
+func (m *ProductReviewMutation) ReviewVideo() (r string, exists bool) {
+	v := m.review_video
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReviewVideo returns the old "review_video" field's value of the ProductReview entity.
+// If the ProductReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductReviewMutation) OldReviewVideo(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReviewVideo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReviewVideo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReviewVideo: %w", err)
+	}
+	return oldValue.ReviewVideo, nil
+}
+
+// ResetReviewVideo resets all changes to the "review_video" field.
+func (m *ProductReviewMutation) ResetReviewVideo() {
+	m.review_video = nil
+}
+
+// Where appends a list predicates to the ProductReviewMutation builder.
+func (m *ProductReviewMutation) Where(ps ...predicate.ProductReview) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ProductReviewMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ProductReviewMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ProductReview, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ProductReviewMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ProductReviewMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ProductReview).
+func (m *ProductReviewMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ProductReviewMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.playable_video != nil {
+		fields = append(fields, productreview.FieldPlayableVideo)
+	}
+	if m.review_video != nil {
+		fields = append(fields, productreview.FieldReviewVideo)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ProductReviewMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case productreview.FieldPlayableVideo:
+		return m.PlayableVideo()
+	case productreview.FieldReviewVideo:
+		return m.ReviewVideo()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ProductReviewMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case productreview.FieldPlayableVideo:
+		return m.OldPlayableVideo(ctx)
+	case productreview.FieldReviewVideo:
+		return m.OldReviewVideo(ctx)
+	}
+	return nil, fmt.Errorf("unknown ProductReview field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProductReviewMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case productreview.FieldPlayableVideo:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlayableVideo(v)
+		return nil
+	case productreview.FieldReviewVideo:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReviewVideo(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ProductReview field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ProductReviewMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ProductReviewMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProductReviewMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ProductReview numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ProductReviewMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ProductReviewMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ProductReviewMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown ProductReview nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ProductReviewMutation) ResetField(name string) error {
+	switch name {
+	case productreview.FieldPlayableVideo:
+		m.ResetPlayableVideo()
+		return nil
+	case productreview.FieldReviewVideo:
+		m.ResetReviewVideo()
+		return nil
+	}
+	return fmt.Errorf("unknown ProductReview field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ProductReviewMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ProductReviewMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ProductReviewMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ProductReviewMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ProductReviewMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ProductReviewMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ProductReviewMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown ProductReview unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ProductReviewMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown ProductReview edge %s", name)
+}
 
 // ProductVideoMutation represents an operation that mutates the ProductVideo nodes in the graph.
 type ProductVideoMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	url           *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*ProductVideo, error)
-	predicates    []predicate.ProductVideo
+	op             Op
+	typ            string
+	id             *int
+	url            *string
+	playable_video *string
+	clearedFields  map[string]struct{}
+	done           bool
+	oldValue       func(context.Context) (*ProductVideo, error)
+	predicates     []predicate.ProductVideo
 }
 
 var _ ent.Mutation = (*ProductVideoMutation)(nil)
@@ -175,6 +940,42 @@ func (m *ProductVideoMutation) ResetURL() {
 	m.url = nil
 }
 
+// SetPlayableVideo sets the "playable_video" field.
+func (m *ProductVideoMutation) SetPlayableVideo(s string) {
+	m.playable_video = &s
+}
+
+// PlayableVideo returns the value of the "playable_video" field in the mutation.
+func (m *ProductVideoMutation) PlayableVideo() (r string, exists bool) {
+	v := m.playable_video
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlayableVideo returns the old "playable_video" field's value of the ProductVideo entity.
+// If the ProductVideo object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductVideoMutation) OldPlayableVideo(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlayableVideo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlayableVideo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlayableVideo: %w", err)
+	}
+	return oldValue.PlayableVideo, nil
+}
+
+// ResetPlayableVideo resets all changes to the "playable_video" field.
+func (m *ProductVideoMutation) ResetPlayableVideo() {
+	m.playable_video = nil
+}
+
 // Where appends a list predicates to the ProductVideoMutation builder.
 func (m *ProductVideoMutation) Where(ps ...predicate.ProductVideo) {
 	m.predicates = append(m.predicates, ps...)
@@ -209,9 +1010,12 @@ func (m *ProductVideoMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ProductVideoMutation) Fields() []string {
-	fields := make([]string, 0, 1)
+	fields := make([]string, 0, 2)
 	if m.url != nil {
 		fields = append(fields, productvideo.FieldURL)
+	}
+	if m.playable_video != nil {
+		fields = append(fields, productvideo.FieldPlayableVideo)
 	}
 	return fields
 }
@@ -223,6 +1027,8 @@ func (m *ProductVideoMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case productvideo.FieldURL:
 		return m.URL()
+	case productvideo.FieldPlayableVideo:
+		return m.PlayableVideo()
 	}
 	return nil, false
 }
@@ -234,6 +1040,8 @@ func (m *ProductVideoMutation) OldField(ctx context.Context, name string) (ent.V
 	switch name {
 	case productvideo.FieldURL:
 		return m.OldURL(ctx)
+	case productvideo.FieldPlayableVideo:
+		return m.OldPlayableVideo(ctx)
 	}
 	return nil, fmt.Errorf("unknown ProductVideo field %s", name)
 }
@@ -249,6 +1057,13 @@ func (m *ProductVideoMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetURL(v)
+		return nil
+	case productvideo.FieldPlayableVideo:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlayableVideo(v)
 		return nil
 	}
 	return fmt.Errorf("unknown ProductVideo field %s", name)
@@ -301,6 +1116,9 @@ func (m *ProductVideoMutation) ResetField(name string) error {
 	switch name {
 	case productvideo.FieldURL:
 		m.ResetURL()
+		return nil
+	case productvideo.FieldPlayableVideo:
+		m.ResetPlayableVideo()
 		return nil
 	}
 	return fmt.Errorf("unknown ProductVideo field %s", name)
@@ -357,16 +1175,17 @@ func (m *ProductVideoMutation) ResetEdge(name string) error {
 // UserVideoMutation represents an operation that mutates the UserVideo nodes in the graph.
 type UserVideoMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	video_id      *int
-	addvideo_id   *int
-	video_url     *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*UserVideo, error)
-	predicates    []predicate.UserVideo
+	op             Op
+	typ            string
+	id             *int
+	video_id       *int
+	addvideo_id    *int
+	video_url      *string
+	playable_video *string
+	clearedFields  map[string]struct{}
+	done           bool
+	oldValue       func(context.Context) (*UserVideo, error)
+	predicates     []predicate.UserVideo
 }
 
 var _ ent.Mutation = (*UserVideoMutation)(nil)
@@ -559,6 +1378,42 @@ func (m *UserVideoMutation) ResetVideoURL() {
 	m.video_url = nil
 }
 
+// SetPlayableVideo sets the "playable_video" field.
+func (m *UserVideoMutation) SetPlayableVideo(s string) {
+	m.playable_video = &s
+}
+
+// PlayableVideo returns the value of the "playable_video" field in the mutation.
+func (m *UserVideoMutation) PlayableVideo() (r string, exists bool) {
+	v := m.playable_video
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlayableVideo returns the old "playable_video" field's value of the UserVideo entity.
+// If the UserVideo object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserVideoMutation) OldPlayableVideo(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlayableVideo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlayableVideo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlayableVideo: %w", err)
+	}
+	return oldValue.PlayableVideo, nil
+}
+
+// ResetPlayableVideo resets all changes to the "playable_video" field.
+func (m *UserVideoMutation) ResetPlayableVideo() {
+	m.playable_video = nil
+}
+
 // Where appends a list predicates to the UserVideoMutation builder.
 func (m *UserVideoMutation) Where(ps ...predicate.UserVideo) {
 	m.predicates = append(m.predicates, ps...)
@@ -593,12 +1448,15 @@ func (m *UserVideoMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserVideoMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 3)
 	if m.video_id != nil {
 		fields = append(fields, uservideo.FieldVideoID)
 	}
 	if m.video_url != nil {
 		fields = append(fields, uservideo.FieldVideoURL)
+	}
+	if m.playable_video != nil {
+		fields = append(fields, uservideo.FieldPlayableVideo)
 	}
 	return fields
 }
@@ -612,6 +1470,8 @@ func (m *UserVideoMutation) Field(name string) (ent.Value, bool) {
 		return m.VideoID()
 	case uservideo.FieldVideoURL:
 		return m.VideoURL()
+	case uservideo.FieldPlayableVideo:
+		return m.PlayableVideo()
 	}
 	return nil, false
 }
@@ -625,6 +1485,8 @@ func (m *UserVideoMutation) OldField(ctx context.Context, name string) (ent.Valu
 		return m.OldVideoID(ctx)
 	case uservideo.FieldVideoURL:
 		return m.OldVideoURL(ctx)
+	case uservideo.FieldPlayableVideo:
+		return m.OldPlayableVideo(ctx)
 	}
 	return nil, fmt.Errorf("unknown UserVideo field %s", name)
 }
@@ -647,6 +1509,13 @@ func (m *UserVideoMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetVideoURL(v)
+		return nil
+	case uservideo.FieldPlayableVideo:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlayableVideo(v)
 		return nil
 	}
 	return fmt.Errorf("unknown UserVideo field %s", name)
@@ -717,6 +1586,9 @@ func (m *UserVideoMutation) ResetField(name string) error {
 		return nil
 	case uservideo.FieldVideoURL:
 		m.ResetVideoURL()
+		return nil
+	case uservideo.FieldPlayableVideo:
+		m.ResetPlayableVideo()
 		return nil
 	}
 	return fmt.Errorf("unknown UserVideo field %s", name)

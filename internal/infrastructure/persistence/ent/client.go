@@ -14,6 +14,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/deepingtalk"
+	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/productreview"
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/productvideo"
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent/uservideo"
 )
@@ -23,6 +25,10 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// DeepingTalk is the client for interacting with the DeepingTalk builders.
+	DeepingTalk *DeepingTalkClient
+	// ProductReview is the client for interacting with the ProductReview builders.
+	ProductReview *ProductReviewClient
 	// ProductVideo is the client for interacting with the ProductVideo builders.
 	ProductVideo *ProductVideoClient
 	// UserVideo is the client for interacting with the UserVideo builders.
@@ -38,6 +44,8 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.DeepingTalk = NewDeepingTalkClient(c.config)
+	c.ProductReview = NewProductReviewClient(c.config)
 	c.ProductVideo = NewProductVideoClient(c.config)
 	c.UserVideo = NewUserVideoClient(c.config)
 }
@@ -130,10 +138,12 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		ProductVideo: NewProductVideoClient(cfg),
-		UserVideo:    NewUserVideoClient(cfg),
+		ctx:           ctx,
+		config:        cfg,
+		DeepingTalk:   NewDeepingTalkClient(cfg),
+		ProductReview: NewProductReviewClient(cfg),
+		ProductVideo:  NewProductVideoClient(cfg),
+		UserVideo:     NewUserVideoClient(cfg),
 	}, nil
 }
 
@@ -151,17 +161,19 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		ProductVideo: NewProductVideoClient(cfg),
-		UserVideo:    NewUserVideoClient(cfg),
+		ctx:           ctx,
+		config:        cfg,
+		DeepingTalk:   NewDeepingTalkClient(cfg),
+		ProductReview: NewProductReviewClient(cfg),
+		ProductVideo:  NewProductVideoClient(cfg),
+		UserVideo:     NewUserVideoClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		ProductVideo.
+//		DeepingTalk.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -183,6 +195,8 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.DeepingTalk.Use(hooks...)
+	c.ProductReview.Use(hooks...)
 	c.ProductVideo.Use(hooks...)
 	c.UserVideo.Use(hooks...)
 }
@@ -190,6 +204,8 @@ func (c *Client) Use(hooks ...Hook) {
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.DeepingTalk.Intercept(interceptors...)
+	c.ProductReview.Intercept(interceptors...)
 	c.ProductVideo.Intercept(interceptors...)
 	c.UserVideo.Intercept(interceptors...)
 }
@@ -197,12 +213,282 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *DeepingTalkMutation:
+		return c.DeepingTalk.mutate(ctx, m)
+	case *ProductReviewMutation:
+		return c.ProductReview.mutate(ctx, m)
 	case *ProductVideoMutation:
 		return c.ProductVideo.mutate(ctx, m)
 	case *UserVideoMutation:
 		return c.UserVideo.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// DeepingTalkClient is a client for the DeepingTalk schema.
+type DeepingTalkClient struct {
+	config
+}
+
+// NewDeepingTalkClient returns a client for the DeepingTalk from the given config.
+func NewDeepingTalkClient(c config) *DeepingTalkClient {
+	return &DeepingTalkClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `deepingtalk.Hooks(f(g(h())))`.
+func (c *DeepingTalkClient) Use(hooks ...Hook) {
+	c.hooks.DeepingTalk = append(c.hooks.DeepingTalk, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `deepingtalk.Intercept(f(g(h())))`.
+func (c *DeepingTalkClient) Intercept(interceptors ...Interceptor) {
+	c.inters.DeepingTalk = append(c.inters.DeepingTalk, interceptors...)
+}
+
+// Create returns a builder for creating a DeepingTalk entity.
+func (c *DeepingTalkClient) Create() *DeepingTalkCreate {
+	mutation := newDeepingTalkMutation(c.config, OpCreate)
+	return &DeepingTalkCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of DeepingTalk entities.
+func (c *DeepingTalkClient) CreateBulk(builders ...*DeepingTalkCreate) *DeepingTalkCreateBulk {
+	return &DeepingTalkCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *DeepingTalkClient) MapCreateBulk(slice any, setFunc func(*DeepingTalkCreate, int)) *DeepingTalkCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &DeepingTalkCreateBulk{err: fmt.Errorf("calling to DeepingTalkClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*DeepingTalkCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &DeepingTalkCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for DeepingTalk.
+func (c *DeepingTalkClient) Update() *DeepingTalkUpdate {
+	mutation := newDeepingTalkMutation(c.config, OpUpdate)
+	return &DeepingTalkUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *DeepingTalkClient) UpdateOne(dt *DeepingTalk) *DeepingTalkUpdateOne {
+	mutation := newDeepingTalkMutation(c.config, OpUpdateOne, withDeepingTalk(dt))
+	return &DeepingTalkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *DeepingTalkClient) UpdateOneID(id int) *DeepingTalkUpdateOne {
+	mutation := newDeepingTalkMutation(c.config, OpUpdateOne, withDeepingTalkID(id))
+	return &DeepingTalkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for DeepingTalk.
+func (c *DeepingTalkClient) Delete() *DeepingTalkDelete {
+	mutation := newDeepingTalkMutation(c.config, OpDelete)
+	return &DeepingTalkDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *DeepingTalkClient) DeleteOne(dt *DeepingTalk) *DeepingTalkDeleteOne {
+	return c.DeleteOneID(dt.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *DeepingTalkClient) DeleteOneID(id int) *DeepingTalkDeleteOne {
+	builder := c.Delete().Where(deepingtalk.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &DeepingTalkDeleteOne{builder}
+}
+
+// Query returns a query builder for DeepingTalk.
+func (c *DeepingTalkClient) Query() *DeepingTalkQuery {
+	return &DeepingTalkQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeDeepingTalk},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a DeepingTalk entity by its id.
+func (c *DeepingTalkClient) Get(ctx context.Context, id int) (*DeepingTalk, error) {
+	return c.Query().Where(deepingtalk.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *DeepingTalkClient) GetX(ctx context.Context, id int) *DeepingTalk {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *DeepingTalkClient) Hooks() []Hook {
+	return c.hooks.DeepingTalk
+}
+
+// Interceptors returns the client interceptors.
+func (c *DeepingTalkClient) Interceptors() []Interceptor {
+	return c.inters.DeepingTalk
+}
+
+func (c *DeepingTalkClient) mutate(ctx context.Context, m *DeepingTalkMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&DeepingTalkCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&DeepingTalkUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&DeepingTalkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&DeepingTalkDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown DeepingTalk mutation op: %q", m.Op())
+	}
+}
+
+// ProductReviewClient is a client for the ProductReview schema.
+type ProductReviewClient struct {
+	config
+}
+
+// NewProductReviewClient returns a client for the ProductReview from the given config.
+func NewProductReviewClient(c config) *ProductReviewClient {
+	return &ProductReviewClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `productreview.Hooks(f(g(h())))`.
+func (c *ProductReviewClient) Use(hooks ...Hook) {
+	c.hooks.ProductReview = append(c.hooks.ProductReview, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `productreview.Intercept(f(g(h())))`.
+func (c *ProductReviewClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProductReview = append(c.inters.ProductReview, interceptors...)
+}
+
+// Create returns a builder for creating a ProductReview entity.
+func (c *ProductReviewClient) Create() *ProductReviewCreate {
+	mutation := newProductReviewMutation(c.config, OpCreate)
+	return &ProductReviewCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProductReview entities.
+func (c *ProductReviewClient) CreateBulk(builders ...*ProductReviewCreate) *ProductReviewCreateBulk {
+	return &ProductReviewCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProductReviewClient) MapCreateBulk(slice any, setFunc func(*ProductReviewCreate, int)) *ProductReviewCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProductReviewCreateBulk{err: fmt.Errorf("calling to ProductReviewClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProductReviewCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProductReviewCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProductReview.
+func (c *ProductReviewClient) Update() *ProductReviewUpdate {
+	mutation := newProductReviewMutation(c.config, OpUpdate)
+	return &ProductReviewUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProductReviewClient) UpdateOne(pr *ProductReview) *ProductReviewUpdateOne {
+	mutation := newProductReviewMutation(c.config, OpUpdateOne, withProductReview(pr))
+	return &ProductReviewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProductReviewClient) UpdateOneID(id int) *ProductReviewUpdateOne {
+	mutation := newProductReviewMutation(c.config, OpUpdateOne, withProductReviewID(id))
+	return &ProductReviewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProductReview.
+func (c *ProductReviewClient) Delete() *ProductReviewDelete {
+	mutation := newProductReviewMutation(c.config, OpDelete)
+	return &ProductReviewDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProductReviewClient) DeleteOne(pr *ProductReview) *ProductReviewDeleteOne {
+	return c.DeleteOneID(pr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProductReviewClient) DeleteOneID(id int) *ProductReviewDeleteOne {
+	builder := c.Delete().Where(productreview.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProductReviewDeleteOne{builder}
+}
+
+// Query returns a query builder for ProductReview.
+func (c *ProductReviewClient) Query() *ProductReviewQuery {
+	return &ProductReviewQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProductReview},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProductReview entity by its id.
+func (c *ProductReviewClient) Get(ctx context.Context, id int) (*ProductReview, error) {
+	return c.Query().Where(productreview.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProductReviewClient) GetX(ctx context.Context, id int) *ProductReview {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProductReviewClient) Hooks() []Hook {
+	return c.hooks.ProductReview
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProductReviewClient) Interceptors() []Interceptor {
+	return c.inters.ProductReview
+}
+
+func (c *ProductReviewClient) mutate(ctx context.Context, m *ProductReviewMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProductReviewCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProductReviewUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProductReviewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProductReviewDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProductReview mutation op: %q", m.Op())
 	}
 }
 
@@ -475,9 +761,9 @@ func (c *UserVideoClient) mutate(ctx context.Context, m *UserVideoMutation) (Val
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		ProductVideo, UserVideo []ent.Hook
+		DeepingTalk, ProductReview, ProductVideo, UserVideo []ent.Hook
 	}
 	inters struct {
-		ProductVideo, UserVideo []ent.Interceptor
+		DeepingTalk, ProductReview, ProductVideo, UserVideo []ent.Interceptor
 	}
 )
