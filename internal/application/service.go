@@ -3,6 +3,7 @@ package application
 import (
 	"github.com/kvngho/vimeovideoconverter/internal/domain"
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence"
+	"github.com/rs/zerolog/log"
 )
 
 type VideoUpdateService struct {
@@ -37,33 +38,52 @@ func (svc *VideoUpdateService) UpdateInformationALL() (int, error) {
 		return 0, err
 	}
 	for _, review := range reviews {
+		if review.ReviewVideo == "" {
+			continue
+		}
 		_, err = svc.UpdateInformation(review.ReviewVideo, "review")
 		count++
 	}
+	log.Info().Int("count", count).Msg("review completed")
+
 	talks, err := svc.Database.GetAllTalks()
 	if err != nil {
 		return 0, err
 	}
 	for _, talk := range talks {
+		if talk.TalkVideo == "" {
+			continue
+		}
 		_, err = svc.UpdateInformation(talk.TalkVideo, "talk")
 		count++
 	}
+	log.Info().Int("count", count).Msg("talk completed")
+
 	productVideos, err := svc.Database.GetAllProductVideos()
 	if err != nil {
 		return 0, err
 	}
 	for _, productVideo := range productVideos {
+		if productVideo.URL == "" {
+			continue
+		}
 		_, err = svc.UpdateInformation(productVideo.URL, "admin")
 		count++
 	}
+	log.Info().Int("count", count).Msg("admin completed")
+
 	userVideos, err := svc.Database.GetAllUserVideos()
 	if err != nil {
 		return 0, err
 	}
 	for _, userVideo := range userVideos {
+		if userVideo.VideoURL == "" {
+			continue
+		}
 		_, err = svc.UpdateInformation(userVideo.VideoURL, "user")
 		count++
 	}
+	log.Info().Int("count", count).Msg("user completed")
 	return count, nil
 
 }
