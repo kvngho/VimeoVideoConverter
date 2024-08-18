@@ -29,3 +29,41 @@ func (svc *VideoUpdateService) UpdateInformation(url string, videoType string) (
 	}
 	return convertedURL, nil
 }
+
+func (svc *VideoUpdateService) UpdateInformationALL() (int, error) {
+	var count int
+	reviews, err := svc.Database.GetAllReviews()
+	if err != nil {
+		return 0, err
+	}
+	for _, review := range reviews {
+		_, err = svc.UpdateInformation(review.ReviewVideo, "review")
+		count++
+	}
+	talks, err := svc.Database.GetAllTalks()
+	if err != nil {
+		return 0, err
+	}
+	for _, talk := range talks {
+		_, err = svc.UpdateInformation(talk.TalkVideo, "talk")
+		count++
+	}
+	productVideos, err := svc.Database.GetAllProductVideos()
+	if err != nil {
+		return 0, err
+	}
+	for _, productVideo := range productVideos {
+		_, err = svc.UpdateInformation(productVideo.URL, "admin")
+		count++
+	}
+	userVideos, err := svc.Database.GetAllUserVideos()
+	if err != nil {
+		return 0, err
+	}
+	for _, userVideo := range userVideos {
+		_, err = svc.UpdateInformation(userVideo.VideoURL, "user")
+		count++
+	}
+	return count, nil
+
+}

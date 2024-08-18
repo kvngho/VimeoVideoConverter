@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"net"
+	"time"
 )
 
 func main() {
@@ -40,6 +41,30 @@ func main() {
 	})
 	defer entClient.Close()
 	videoUpdateService := application.NewVideoUpdateService(entClient, vimeoClient)
+	go func() {
+		ticker := time.NewTicker(600 * time.Minute)
+		defer ticker.Stop()
+
+		log.Info().Msg("Start Period Video Fetch work...")
+		count, err := videoUpdateService.UpdateInformationALL()
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to update Video Information")
+		}
+		log.Info().Int("count", count).Msg("Update Video Information Completed")
+
+		for {
+			select {
+			case <-ticker.C:
+				log.Info().Msg("Start Period Video Fetch work...")
+				count, err := videoUpdateService.UpdateInformationALL()
+				if err != nil {
+					log.Error().Err(err).Msg("Failed to update Video Information")
+				}
+				log.Info().Int("count", count).Msg("Update Video Information Completed")
+			}
+		}
+	}()
+
 	queue := worker_queue.NewWorkerPool(cfg.WorkerNumber, videoUpdateService)
 	queue.Start()
 	defer queue.Stop()
