@@ -26,6 +26,7 @@ WORKDIR /app
 # Copy the Pre-built binary file from the previous stage
 COPY --from=build /app/main .
 COPY --from=build /app/config.yaml .
+COPY --from=build /app/cert.pem .
 
 # Expose port 50051 to the outside world
 EXPOSE 50051
