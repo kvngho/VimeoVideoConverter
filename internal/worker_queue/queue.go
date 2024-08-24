@@ -54,6 +54,7 @@ func (wp *WorkerPool) Start() {
 		for failedJob := range wp.FailedJobQueue {
 			if failedJob.FailedCount > 3 {
 				log.Error().Str("video_url", failedJob.videoURL).Msg("Error. This video url is not yet valid")
+				continue
 			}
 			time.Sleep(30 * time.Second) // 모든 작업에 대해서 5초 대기, 추후 수정 필요
 			convertedUrl, err := wp.JobAction.UpdateInformation(failedJob.videoURL, failedJob.videoType)
