@@ -30,6 +30,7 @@ COPY --from=build /app/cert.pem .
 
 # Expose port 50051 to the outside world
 EXPOSE 50051
+EXPOSE 50052
 
 # Command to run the executable
 CMD ["./main"]

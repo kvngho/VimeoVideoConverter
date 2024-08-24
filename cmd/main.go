@@ -7,6 +7,7 @@ import (
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/api/vimeo"
 	gprc2 "github.com/kvngho/vimeovideoconverter/internal/infrastructure/grpc"
 	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/persistence/ent"
+	"github.com/kvngho/vimeovideoconverter/internal/infrastructure/server"
 	"github.com/kvngho/vimeovideoconverter/internal/worker_queue"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -42,15 +43,15 @@ func main() {
 	defer entClient.Close()
 	videoUpdateService := application.NewVideoUpdateService(entClient, vimeoClient)
 	go func() {
-		ticker := time.NewTicker(600 * time.Minute)
+		ticker := time.NewTicker(600 * time.Second)
 		defer ticker.Stop()
 
-		log.Info().Msg("Start Period Video Fetch work...")
-		count, err := videoUpdateService.UpdateInformationALL()
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to update Video Information")
-		}
-		log.Info().Int("count", count).Msg("Update Video Information Completed")
+		//log.Info().Msg("Start Period Video Fetch work...")
+		//count, err := videoUpdateService.UpdateInformationALL()
+		//if err != nil {
+		//	log.Error().Err(err).Msg("Failed to update Video Information")
+		//}
+		//log.Info().Int("count", count).Msg("Update Video Information Completed")
 
 		for {
 			select {
@@ -67,6 +68,14 @@ func main() {
 
 	queue := worker_queue.NewWorkerPool(cfg.WorkerNumber, videoUpdateService)
 	queue.Start()
+	webserver := server.NewWebServer(queue)
+	go func() {
+		log.Info().Msg("Start Webserver...")
+		if err := webserver.Start(); err != nil {
+			log.Error().Err(err).Msg("Failed to start web server")
+		}
+	}()
+
 	defer queue.Stop()
 	pb.RegisterConverterServer(grpcServer, gprc2.NewVideoServer(queue))
 	log.Info().Msg("Starting grpc server...")
