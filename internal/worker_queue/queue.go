@@ -52,15 +52,15 @@ func (wp *WorkerPool) Start() {
 	go func() {
 		log.Info().Msg("Start handling failed job")
 		for failedJob := range wp.FailedJobQueue {
-			if failedJob.FailedCount > 3 {
-				log.Error().Str("video_url", failedJob.videoURL).Msg("Error. This video url is not yet valid")
-				continue
-			}
 			time.Sleep(30 * time.Second) // 모든 작업에 대해서 5초 대기, 추후 수정 필요
 			convertedUrl, err := wp.JobAction.UpdateInformation(failedJob.videoURL, failedJob.videoType)
 			if err != nil {
 				log.Info().Str("video_id", failedJob.videoURL).Int("retry", failedJob.FailedCount).Msg("Job failed - Requeue")
-				wp.ReSubmitJob(failedJob.JobDescription, failedJob.FailedCount+1)
+				if failedJob.FailedCount < 3 {
+					wp.ReSubmitJob(failedJob.JobDescription, failedJob.FailedCount+1)
+					continue
+				}
+				log.Error().Str("video_url", failedJob.videoURL).Msg("Error. This video url is not yet valid")
 			} else {
 				log.Info().Str("video_id", failedJob.videoURL).Str("original_url", failedJob.videoURL).Str("converted_url", convertedUrl).Msg("Job ended")
 			}
